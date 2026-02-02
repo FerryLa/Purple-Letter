@@ -11,7 +11,12 @@
       "Bash(npm uninstall:*)",
       "Bash(curl:*)",
       "Bash(.venv/Scripts/python:*)",
-      "Bash(taskkill:*)"
+      "Bash(taskkill:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\n[FEAT] Admin UI 추가 및 News-Leafletter 연동 개선\n\n- React + TypeScript 기반 Admin Selection UI 추가\n  - Dashboard: 추천 뉴스 Top 4, 통계, 동기화 상태\n  - News List: 뉴스 필터링/선택, 페이지네이션\n  - Newsletter: 선택된 뉴스, 검증 상태, 섹터 커버리지\n  - Analytics: 섹터/점수/태그 분포 차트 \\(Recharts\\)\n\n- 기술 스택: Vite, Tailwind CSS, TanStack Query, React Router\n\n- core_import.py: NEWS_SCANNER_DB_PATH 설정 지원 추가\n- README.md: 시스템 아키텍처, Admin UI 설명, 환경 설정 가이드 업데이트\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git checkout:*)",
+      "Bash(git push:*)",
+      "Bash(python:*)"
     ]
   }
 }
