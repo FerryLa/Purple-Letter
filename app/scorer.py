@@ -66,6 +66,27 @@ class ImpactScorer:
         "BREAKING", "URGENT", "ALERT"
     ]
 
+    # E-commerce keywords (이커머스 동향 필터)
+    ECOMMERCE_KEYWORDS = [
+        # 플랫폼
+        "쿠팡", "네이버쇼핑", "11번가", "G마켓", "옥션", "위메프", "티몬",
+        "SSG닷컴", "롯데온", "마켓컬리", "오아시스", "무신사", "지그재그",
+        "에이블리", "카카오쇼핑", "배달의민족", "요기요", "쿠팡이츠",
+        "아마존", "알리익스프레스", "알리", "테무", "Temu", "Amazon", "eBay",
+        # 이커머스 용어
+        "이커머스", "e커머스", "온라인쇼핑", "온라인 쇼핑", "온라인몰",
+        "오픈마켓", "소셜커머스", "라이브커머스", "퀵커머스", "새벽배송",
+        "로켓배송", "당일배송", "풀필먼트", "D2C", "리테일", "리테일테크",
+        # 결제/핀테크
+        "네이버페이", "카카오페이", "토스", "페이코", "삼성페이", "간편결제",
+        "BNPL", "선불충전", "포인트", "멤버십",
+        # 물류/배송
+        "물류", "배송", "택배", "CJ대한통운", "한진택배", "롯데택배",
+        "쿠팡로지스틱스", "마켓플레이스",
+        # 영어 키워드
+        "ecommerce", "e-commerce", "online shopping", "marketplace", "fulfillment"
+    ]
+
     def __init__(self):
         self.scored_count = 0
         # Load weights from settings
@@ -96,13 +117,15 @@ class ImpactScorer:
         business_relevance = self._calculate_business_relevance(text, sector)
         tech_shift = self._calculate_tech_shift(text, sector)
         urgency = self._calculate_urgency(article_data.get("title", ""), text)
+        ecommerce_relevance = self._calculate_ecommerce_relevance(text)
 
-        # Calculate total impact score (4-10)
+        # Calculate total impact score (4-10, +2 bonus for ecommerce)
         impact_score = (
             market_relevance +
             business_relevance +
             tech_shift +
-            urgency
+            urgency +
+            ecommerce_relevance  # 이커머스 관련 뉴스에 가산점
         )
 
         # Update article data with scores
@@ -111,6 +134,7 @@ class ImpactScorer:
             "business_relevance": business_relevance,
             "tech_shift": tech_shift,
             "urgency": urgency,
+            "ecommerce_relevance": ecommerce_relevance,
             "impact_score": impact_score,
         })
 
@@ -219,6 +243,29 @@ class ImpactScorer:
 
         return 1
 
+    def _calculate_ecommerce_relevance(self, text: str) -> int:
+        """
+        Calculate e-commerce relevance score (0-2)
+
+        2: Directly about e-commerce platforms/trends
+        1: Indirectly related (payments, logistics)
+        0: Not e-commerce related
+        """
+        matched_count = sum(1 for kw in self.ECOMMERCE_KEYWORDS if kw.lower() in text)
+
+        if matched_count >= 2:
+            return 2  # 강한 이커머스 관련성
+        elif matched_count == 1:
+            return 1  # 약한 이커머스 관련성
+        return 0  # 이커머스 무관
+
+    def is_ecommerce_related(self, article_data: Dict[str, Any]) -> bool:
+        """Check if article is e-commerce related"""
+        title = article_data.get("title", "").lower()
+        summary = article_data.get("summary", "").lower()
+        text = f"{title} {summary}"
+        return any(kw.lower() in text for kw in self.ECOMMERCE_KEYWORDS)
+
     def get_score_breakdown(self, article_data: Dict[str, Any]) -> Dict[str, Any]:
         """
         Get detailed score breakdown with explanations
@@ -261,8 +308,16 @@ class ImpactScorer:
                     if kw in title
                 ][:3],
             },
+            "ecommerce_relevance": {
+                "score": article_data.get("ecommerce_relevance", 0),
+                "max": 2,
+                "matched_keywords": [
+                    kw for kw in self.ECOMMERCE_KEYWORDS
+                    if kw.lower() in text
+                ][:5],
+            },
             "total_impact_score": article_data.get("impact_score", 4),
-            "max_possible": 10,
+            "max_possible": 12,  # 4-12 (이커머스 보너스 포함)
         }
 
         return breakdown
