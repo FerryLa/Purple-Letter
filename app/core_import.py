@@ -331,5 +331,8 @@ def get_connector() -> NewsScannerCoreConnector:
     """Get or create the singleton connector instance"""
     global _connector
     if _connector is None:
-        _connector = NewsScannerCoreConnector()
+        _connector = NewsScannerCoreConnector(
+            core_path=settings.NEWS_SCANNER_CORE_PATH,
+            db_path=settings.NEWS_SCANNER_DB_PATH
+        )
     return _connector
